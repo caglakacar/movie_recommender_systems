@@ -2,145 +2,326 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Favorite Movies</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Favorite Movies</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='screenshots/favicon.png') }}">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0b1020;
+      --bg-2: #11182d;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f5f7fb;
+      --muted: #aab3c5;
+      --accent: #7c5cff;
+      --accent-2: #5b8cff;
+      --danger: #ff5c7a;
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+
     body {
-      font-family: sans-serif;
-      background: linear-gradient(to bottom right, #6a1b1b, #f5e7c0);
       margin: 0;
-      padding: 2rem;
-      text-align: center;
-      animation: fadeIn 1s ease-in-out;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124, 92, 255, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(91, 140, 255, 0.16), transparent 28%),
+        linear-gradient(180deg, #0a0f1d 0%, #0d1324 45%, #0b1020 100%);
+      min-height: 100vh;
     }
 
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(-30px); }
-      100% { opacity: 1; transform: translateY(0); }
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 36px 22px 56px;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: auto;
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
     }
 
-    .back-btn {
-      padding: 0.6rem 1rem;
-      height: 43px;
-      background: white;
-      color: #c62828;
-      border: 2px solid #c62828;
-      font-size: 1rem;
-      cursor: pointer;
-      border-radius: 5px;
-      transition: 0.3s;
-      margin-bottom: 2rem;
+    .title-wrap h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.9rem, 4vw, 3rem);
+      letter-spacing: -0.03em;
     }
 
-    .back-btn:hover {
-      background: #c62828;
+    .title-wrap p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-size: 0.96rem;
+      font-weight: 700;
       color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(91, 140, 255, 0.24);
+      transition: 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 2rem;
-      color: #fff4e5;
+    .action-btn.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: none;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .stats,
+    .info-message {
+      margin-bottom: 24px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.2rem;
-      justify-items: center;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 20px;
     }
 
     .card {
-      background: #fff8e1;
-      border-radius: 8px;
-      padding: 1rem;
-      width: 280px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      text-align: left;
-      position: relative;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+      border-radius: 22px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
 
     .card:hover {
-      transform: scale(1.03);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      transform: translateY(-4px);
+      border-color: rgba(124, 92, 255, 0.35);
+      box-shadow: 0 24px 44px rgba(0, 0, 0, 0.38);
     }
 
-    .card img {
+    .poster-wrap {
+      position: relative;
+    }
+
+    .poster-wrap img {
       width: 100%;
-      height: 320px;
+      height: 360px;
       object-fit: cover;
-      border-radius: 4px;
+      display: block;
+      background: #151d33;
     }
 
-    .card h3 {
-      margin-top: 0.5rem;
-      font-size: 1.2rem;
-    }
-
-    .card p {
-      font-size: 0.9rem;
-      margin: 0.5rem 0;
-    }
-
-    .card a {
-      color: #b71c1c;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .heart-icon {
-      font-size: 1.5rem;
-      color: #e53935;
-      cursor: pointer;
+    .favorite-badge {
       position: absolute;
-      bottom: 10px;
-      right: 10px;
-      transition: transform 0.2s ease, color 0.3s ease;
+      top: 14px;
+      left: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(11, 16, 32, 0.72);
+      color: white;
+      font-size: 0.86rem;
+      font-weight: 700;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
     }
 
-    .heart-icon:hover {
-      transform: scale(1.2);
-      color: #999;
-    }
-
-    .empty-msg {
-      color: #fff4e5;
-      margin-top: 2rem;
+    .remove-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(11, 16, 32, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--danger);
+      cursor: pointer;
       font-size: 1.2rem;
+      transition: 0.2s ease;
+      backdrop-filter: blur(8px);
+    }
+
+    .remove-btn:hover {
+      transform: scale(1.08);
+    }
+
+    .card-content {
+      padding: 16px 16px 18px;
+    }
+
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 1.18rem;
+      line-height: 1.35;
+    }
+
+    .meta {
+      color: #cad2e4;
+      font-size: 0.92rem;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .description {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.6;
+      min-height: 96px;
+      margin: 0 0 16px;
+      display: -webkit-box;
+      line-clamp: 4;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .trailer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #dcdfff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.93rem;
+    }
+
+    .trailer-link:hover {
+      color: white;
+    }
+
+    .empty-state {
+      margin-top: 26px;
+      padding: 28px 22px;
+      border-radius: 20px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 24px 14px 40px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .actions {
+        width: 100%;
+      }
+
+      .action-btn {
+        width: 100%;
+      }
+
+      .poster-wrap img {
+        height: 330px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <button class="back-btn" onclick="window.location.href='/'">🏠 Back to Home</button>
-    <h1>❤️ My Favorite Movies</h1>
+  <div class="page">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>Your Favorite Movies</h1>
+        <p>All the movies you’ve saved in one place.</p>
+      </div>
+
+      <div class="actions">
+        {% if favorites %}
+          <a class="action-btn" href="{{ url_for('favorites_recommendations') }}">
+            Get Recommendations From Favorites
+          </a>
+        {% endif %}
+        <a class="action-btn secondary" href="{{ url_for('index') }}">← Back to Home</a>
+      </div>
+    </div>
+
+    {% if empty_recommendation %}
+      <div class="info-message">
+        You need at least one favorite movie before getting personalized recommendations.
+      </div>
+    {% endif %}
+
+    <div class="stats">
+      {% if favorites %}
+        You currently have <strong>{{ favorites|length }}</strong> favorite movie{% if favorites|length != 1 %}s{% endif %}.
+      {% else %}
+        Your favorites list is empty for now.
+      {% endif %}
+    </div>
 
     {% if favorites %}
       <div class="grid">
         {% for movie in favorites %}
-        <div class="card">
-          <img src="{{ movie.poster }}" alt="{{ movie.title }}">
-          <h3>{{ movie.title }}</h3>
-          <p><strong>{{ movie.genre }}</strong>, {{ movie.director }}</p>
-          <p>{{ movie.description }}</p>
-          <a href="{{ movie.trailer }}" target="_blank">Watch Trailer</a>
-          <span class="heart-icon" onclick="removeFromFavorites(this, '{{ movie.title }}')">&#10084;</span>
-        </div>
+          <div class="card">
+            <div class="poster-wrap">
+              <img src="{{ movie.poster }}" alt="{{ movie.title }}"
+                   onerror="this.onerror=null; this.src='/static/posters/no-poster.jpg'">
+              <div class="favorite-badge">Favorite</div>
+              <span class="remove-btn" onclick="removeFromFavorites('{{ movie.title }}')">&#10084;</span>
+            </div>
+
+            <div class="card-content">
+              <h3 class="card-title">{{ movie.title }}</h3>
+              <div class="meta">
+                <strong>{{ movie.genre }}</strong><br>
+                Director: {{ movie.director }}
+              </div>
+
+              <p class="description">{{ movie.description }}</p>
+
+              <a class="trailer-link" href="{{ movie.trailer }}" target="_blank">▶ Watch Trailer</a>
+            </div>
+          </div>
         {% endfor %}
       </div>
     {% else %}
-      <p class="empty-msg">You haven't added any movies to your favorites yet.</p>
+      <div class="empty-state">
+        You haven’t added any movies to your favorites yet.
+      </div>
     {% endif %}
   </div>
 
   <script>
-    function removeFromFavorites(el, title) {
+    function removeFromFavorites(title) {
       fetch("/remove_favorite", {
         method: "POST",
         headers: {
@@ -153,7 +334,8 @@
         if (data.status === "success") {
           window.location.reload();
         }
-      });
+      })
+      .catch(err => console.error("Error:", err));
     }
   </script>
 </body>

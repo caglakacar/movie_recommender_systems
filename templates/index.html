@@ -2,226 +2,854 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Smart Movie Recommender App</title>
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Movie Recommender</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='screenshots/favicon.png') }}">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0b1020;
+      --bg-2: #11182d;
+      --card: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f5f7fb;
+      --muted: #aab3c5;
+      --accent: #7c5cff;
+      --accent-2: #5b8cff;
+      --danger: #ff5c7a;
+      --success: #30d158;
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+
     body {
-      font-family: sans-serif;
-      background: linear-gradient(to bottom right, #6a1b1b, #f5e7c0);
       margin: 0;
-      padding: 2rem;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(124, 92, 255, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(91, 140, 255, 0.16), transparent 28%),
+        linear-gradient(180deg, #0a0f1d 0%, #0d1324 45%, #0b1020 100%);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 36px 22px 56px;
+    }
+
+    .hero {
+      margin-bottom: 28px;
       text-align: center;
-      animation: fadeIn 1s ease-in-out;
     }
 
-    @keyframes fadeIn {
-      0% { opacity: 0; transform: translateY(-30px); }
-      100% { opacity: 1; transform: translateY(0); }
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(124, 92, 255, 0.12);
+      border: 1px solid rgba(124, 92, 255, 0.28);
+      color: #d8d0ff;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: auto;
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: -0.03em;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin: 14px auto 0;
+      color: var(--muted);
+      font-size: 1.02rem;
+      line-height: 1.65;
+    }
+
+    .search-panel {
       position: relative;
+      z-index: 50;
+      margin: 30px auto 10px;
+      max-width: 980px;
+      padding: 18px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
-    .input-wrapper {
+    .search-row {
       display: flex;
-      justify-content: center;
+      gap: 12px;
       align-items: center;
-      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .input-container {
       position: relative;
-      width: 385px;
+      flex: 1 1 520px;
+      min-width: 260px;
+      z-index: 60;
     }
 
-    input {
+    #movieInput {
       width: 100%;
-      padding: 0.7rem 2.5rem 0.7rem 0.7rem;
+      height: 58px;
+      padding: 0 52px 0 18px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      outline: none;
       font-size: 1rem;
-      border: 1px solid #b71c1c;
-      border-radius: 5px;
-      box-sizing: border-box;
+      transition: 0.2s ease;
+    }
+
+    #movieInput::placeholder {
+      color: #96a0b5;
+    }
+
+    #movieInput:focus {
+      border-color: rgba(124, 92, 255, 0.7);
+      box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.14);
     }
 
     #clearButton {
       position: absolute;
-      right: 8px;
       top: 50%;
+      right: 14px;
       transform: translateY(-50%);
-      font-size: 1.7rem;
-      color: #b71c1c;
-      background: transparent;
       border: none;
+      background: transparent;
+      color: #cfd6e6;
+      font-size: 1.5rem;
       cursor: pointer;
       display: none;
       line-height: 1;
+      z-index: 70;
     }
 
     #suggestions {
       position: absolute;
-      top: 100%;
+      top: calc(100% + 8px);
       left: 0;
       right: 0;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-top: none;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 100;
-      border-radius: 0 0 5px 5px;
+      margin: 0;
+      padding: 8px;
+      list-style: none;
+      border-radius: 16px;
+      background: #12192c;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
       display: none;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 9999;
     }
 
     #suggestions li {
-      list-style: none;
-      padding: 8px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
+      padding: 12px 12px;
+      border-radius: 12px;
+      color: #eef2fb;
       cursor: pointer;
+      transition: 0.2s ease;
+      text-align: left;
     }
 
     #suggestions li:hover {
-      background-color: #ffe0e0;
+      background: rgba(124, 92, 255, 0.14);
     }
 
-    button[type="submit"],
-    .favorites-btn {
-      padding: 0.7rem 1rem;
-      height: 43px;
-      background: #c62828;
-      color: white;
+    .primary-btn,
+    .secondary-btn,
+    .clear-results-btn,
+    .show-more-btn {
+      height: 58px;
       border: none;
-      font-size: 1rem;
+      border-radius: 16px;
+      padding: 0 20px;
+      font-size: 0.98rem;
+      font-weight: 700;
       cursor: pointer;
-      border-radius: 5px;
+      transition: 0.2s ease;
+      white-space: nowrap;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1.5rem;
-      color: #fff4e5;
+    .primary-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      box-shadow: 0 12px 24px rgba(91, 140, 255, 0.24);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
-    h2 {
-      margin-top: 2.5rem;
-      color: #4e0000;
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .secondary-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .secondary-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .clear-results-btn {
+      height: 40px;
+      padding: 0 14px;
+      font-size: 0.9rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .clear-results-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .show-more-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    .show-more-btn {
+      height: 48px;
+      padding: 0 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .show-more-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .results-zone {
+      position: relative;
+      transition: opacity 0.25s ease, filter 0.25s ease, transform 0.25s ease;
+    }
+
+    .results-zone.dimmed {
+      opacity: 0.35;
+      filter: blur(4px);
+      transform: scale(0.985);
+      pointer-events: none;
+    }
+
+    .results-header,
+    .grid,
+    .card {
+      position: relative;
+      z-index: 1;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 34px 0 18px;
+      flex-wrap: wrap;
+    }
+
+    .results-header h2 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    .results-side {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .results-note {
+      color: var(--muted);
+      font-size: 0.95rem;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.2rem;
-      justify-items: center;
-      margin-top: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 20px;
     }
 
     .card {
-      background: #fff8e1;
-      border-radius: 8px;
-      padding: 1rem;
-      width: 280px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      text-align: left;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
 
     .card:hover {
-      transform: scale(1.03);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      transform: translateY(-4px);
+      border-color: rgba(124, 92, 255, 0.35);
+      box-shadow: 0 24px 44px rgba(0, 0, 0, 0.38);
     }
 
-    .card img {
+    .poster-wrap {
+      position: relative;
+    }
+
+    .poster-wrap img {
       width: 100%;
-      height: 320px;
+      height: 360px;
       object-fit: cover;
-      border-radius: 4px;
+      display: block;
+      background: #151d33;
     }
 
-    .card h3 {
-      margin-top: 0.5rem;
-      font-size: 1.2rem;
+    .top-tags {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 58px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      z-index: 4;
+      pointer-events: none;
     }
 
-    .card p {
-      font-size: 0.9rem;
-      margin: 0.5rem 0;
-    }
-
-    .card a {
-      color: #b71c1c;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .error {
-      color: #b71c1c;
-      margin-top: 2rem;
+    .top-reason-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(124, 92, 255, 0.82);
+      color: #f7f3ff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 18px rgba(91, 140, 255, 0.18);
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .heart-icon {
-      font-size: 1.5rem;
-      color: #ccc;
-      cursor: pointer;
       position: absolute;
-      bottom: 10px;
-      right: 10px;
-      transition: transform 0.2s ease, color 0.3s ease;
+      top: 12px;
+      right: 12px;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(11, 16, 32, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #d0d5e2;
+      cursor: pointer;
+      font-size: 1.12rem;
+      transition: 0.2s ease;
+      backdrop-filter: blur(8px);
+      z-index: 5;
     }
 
     .heart-icon:hover {
-      transform: scale(1.2);
+      transform: scale(1.08);
     }
 
     .heart-icon.favorited {
-      color: #e53935;
+      color: var(--danger);
+    }
+
+    .card-content {
+      padding: 16px 16px 18px;
+    }
+
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 1.18rem;
+      line-height: 1.35;
+    }
+
+    .meta {
+      color: #cad2e4;
+      font-size: 0.92rem;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .description {
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.6;
+      min-height: 96px;
+      margin: 0 0 16px;
+      display: -webkit-box;
+      line-clamp: 4;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .trailer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #dcdfff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.93rem;
+    }
+
+    .trailer-link:hover {
+      color: white;
+    }
+
+    .empty-state,
+    .error {
+      margin-top: 26px;
+      padding: 18px 20px;
+      border-radius: 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .loading-state {
+      display: none;
+      margin-top: 30px;
+    }
+
+    .loading-state.active {
+      display: block;
+    }
+
+    .loading-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.18);
+      border-top-color: var(--accent);
+      animation: spin 0.9s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .loading-text {
+      font-size: 0.98rem;
+      color: #e7ebf5;
+      font-weight: 600;
+    }
+
+    .loading-subtext {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+      gap: 20px;
+    }
+
+    .skeleton-card {
+      overflow: hidden;
+      border-radius: 22px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .skeleton-poster,
+    .skeleton-line,
+    .skeleton-pill,
+    .skeleton-button {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .skeleton-poster::after,
+    .skeleton-line::after,
+    .skeleton-pill::after,
+    .skeleton-button::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.14),
+        transparent
+      );
+      animation: shimmer 1.4s infinite;
+    }
+
+    .skeleton-poster {
+      height: 360px;
+      background: #151d33;
+    }
+
+    .skeleton-content {
+      padding: 16px 16px 18px;
+    }
+
+    .skeleton-pill {
+      width: 72px;
+      height: 28px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    .skeleton-line.title {
+      height: 20px;
+      width: 72%;
+      margin-bottom: 14px;
+    }
+
+    .skeleton-line.short {
+      width: 42%;
+    }
+
+    .skeleton-line.medium {
+      width: 68%;
+    }
+
+    .skeleton-line.long {
+      width: 100%;
+    }
+
+    .skeleton-button {
+      width: 120px;
+      height: 16px;
+      border-radius: 999px;
+      margin-top: 18px;
+    }
+
+    .submit-loading {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .primary-btn.loading {
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .primary-btn.loading .btn-text {
+      display: none;
+    }
+
+    .primary-btn.loading .submit-loading {
+      display: inline-flex;
+    }
+
+    @keyframes shimmer {
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 24px 14px 40px;
+      }
+
+      .search-panel {
+        padding: 14px;
+        border-radius: 18px;
+      }
+
+      .search-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .primary-btn,
+      .secondary-btn,
+      #movieInput {
+        width: 100%;
+      }
+
+      .results-side {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .clear-results-btn,
+      .show-more-btn {
+        width: 100%;
+      }
+
+      .poster-wrap img,
+      .skeleton-poster {
+        height: 330px;
+      }
+
+      .top-tags {
+        top: 10px;
+        left: 10px;
+        right: 54px;
+        gap: 5px;
+      }
+
+      .top-reason-badge {
+        font-size: 0.68rem;
+        padding: 5px 9px;
+      }
+
+      .heart-icon {
+        top: 10px;
+        right: 10px;
+        width: 38px;
+        height: 38px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Smart Movie Recommender</h1>
-    <form method="post" autocomplete="off">
-      <div class="input-wrapper">
-        <div class="input-container">
-          <input type="text" name="movie" id="movieInput" placeholder="Enter a movie name..." value="{{ query }}">
-          <button type="button" id="clearButton" aria-label="Clear input">&times;</button>
-          <ul id="suggestions"></ul>
-        </div>
-        <button type="submit">Find Similar Movies</button>
-        <button type="button" class="favorites-btn" onclick="window.location.href='/favorites'">❤️ Favorites</button>
-      </div>
-    </form>
+  <div class="page">
+    <section class="hero">
+      <div class="badge">AI-Powered Movie Discovery</div>
+      <h1>Find your next favorite movie</h1>
+      <p class="subtitle">
+        Search for a movie you already love and get similar recommendations based on genres,
+        cast, director, and content similarity.
+      </p>
+    </section>
 
-    {% if recommendations %}
-    <h2>Predicted Results</h2>
-    <div class="grid">
-      {% for movie in recommendations %}
-      <div class="card">
-        <img src="{{ movie.poster }}" alt="{{ movie.title }}"
-             onerror="this.onerror=null; this.src='/static/posters/no-poster.jpg'">
-        <h3>{{ movie.title }}</h3>
-        <p><strong>{{ movie.genre }}</strong>, {{ movie.director }}</p>
-        <p>{{ movie.description }}</p>
-        <p>Similarity: <strong>{{ movie.similarity }}</strong></p>
-        <a href="{{ movie.trailer }}" target="_blank">Watch Trailer</a>
-        <span class="heart-icon {% if movie.is_favorite %}favorited{% endif %}" onclick="toggleFavorite(this, '{{ movie.title }}')">&#10084;</span>
+    <section class="search-panel">
+      <form method="post" action="{{ url_for('index') }}" autocomplete="off">
+        <div class="search-row">
+          <div class="input-container">
+            <input
+              type="text"
+              name="movie"
+              id="movieInput"
+              placeholder="Search for a movie..."
+              value="{{ query }}"
+            >
+            <button type="button" id="clearButton" aria-label="Clear input">&times;</button>
+            <ul id="suggestions"></ul>
+          </div>
+
+          <button type="submit" class="primary-btn" id="submitBtn">
+            <span class="btn-text">Find Recommendations</span>
+            <span class="submit-loading">
+              <span class="spinner"></span>
+              <span>Loading...</span>
+            </span>
+          </button>
+
+          <button type="button" class="secondary-btn" onclick="window.location.href='/favorites'">❤ Favorites</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="loading-state" id="loadingState">
+      <div class="loading-top">
+        <div class="spinner"></div>
+        <div>
+          <div class="loading-text">Finding the best recommendations for you...</div>
+          <div class="loading-subtext">Analyzing similar movies, genres, cast, and director matches.</div>
+        </div>
       </div>
-      {% endfor %}
+
+      <div class="skeleton-grid">
+        <div class="skeleton-card">
+          <div class="skeleton-poster"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-button"></div>
+          </div>
+        </div>
+
+        <div class="skeleton-card">
+          <div class="skeleton-poster"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-button"></div>
+          </div>
+        </div>
+
+        <div class="skeleton-card">
+          <div class="skeleton-poster"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-button"></div>
+          </div>
+        </div>
+
+        <div class="skeleton-card">
+          <div class="skeleton-poster"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-pill"></div>
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-button"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="results-zone" id="resultsZone">
+      {% if recommendations %}
+        <div class="results-header">
+          <h2>{{ results_title }}</h2>
+
+          <div class="results-side">
+            <div class="results-note">Top {{ recommendations|length }} recommendations</div>
+            <a href="{{ url_for('index') }}" class="clear-results-btn">Clear Results</a>
+          </div>
+        </div>
+
+        <div class="grid" id="resultsGrid">
+          {% for movie in recommendations %}
+            <div class="card">
+              <div class="poster-wrap">
+                {% if movie.why %}
+                  <div class="top-tags">
+                    {% for reason in movie.why %}
+                      <span class="top-reason-badge">{{ reason }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                <img src="{{ movie.poster }}" alt="{{ movie.title }}"
+                     onerror="this.onerror=null; this.src='/static/posters/no-poster.jpg'">
+                <span class="heart-icon {% if movie.is_favorite %}favorited{% endif %}"
+                      onclick="toggleFavorite(this, '{{ movie.title }}')">&#10084;</span>
+              </div>
+
+              <div class="card-content">
+                <h3 class="card-title">{{ movie.title }}</h3>
+                <div class="meta">
+                  <strong>{{ movie.genre }}</strong><br>
+                  Director: {{ movie.director }}
+                </div>
+
+                <p class="description">{{ movie.description }}</p>
+
+                <div class="card-actions">
+                  <a class="trailer-link" href="{{ movie.trailer }}" target="_blank" rel="noopener noreferrer">▶ Watch Trailer</a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if has_more_results and show_more_url %}
+          <div class="show-more-wrap">
+            <a href="{{ show_more_url }}" class="show-more-btn">Show More</a>
+          </div>
+        {% endif %}
+      {% elif error_message %}
+        <div class="error" id="errorState">{{ error_message }}</div>
+      {% else %}
+        <div class="empty-state" id="emptyState">
+          Start by typing a movie name above. You can also use autocomplete suggestions.
+        </div>
+      {% endif %}
     </div>
-    {% elif query %}
-      <p class="error">❌ No matching movie found. Please try another title.</p>
-    {% endif %}
   </div>
 
   <script>
     const input = document.getElementById("movieInput");
     const clearButton = document.getElementById("clearButton");
     const suggestionsList = document.getElementById("suggestions");
+    const form = document.querySelector('form[method="post"]');
+    const submitBtn = document.getElementById("submitBtn");
+    const loadingState = document.getElementById("loadingState");
+    const resultsZone = document.getElementById("resultsZone");
+
+    function setResultsDimmed(shouldDim) {
+      if (!resultsZone) return;
+      resultsZone.classList.toggle("dimmed", shouldDim);
+    }
 
     window.addEventListener("DOMContentLoaded", () => {
       if (input.value.trim()) {
@@ -231,8 +859,7 @@
 
     input.addEventListener("input", () => {
       clearButton.style.display = input.value.length > 0 ? "block" : "none";
-
-      const query = input.value;
+      const query = input.value.trim();
       suggestionsList.innerHTML = "";
 
       if (query.length > 1) {
@@ -241,11 +868,13 @@
           .then(data => {
             if (data.length > 0) {
               suggestionsList.style.display = "block";
+              setResultsDimmed(true);
             } else {
               suggestionsList.style.display = "none";
+              setResultsDimmed(false);
             }
 
-            data.forEach(title => {
+            data.slice(0, 5).forEach(title => {
               const li = document.createElement("li");
               li.textContent = title;
               li.addEventListener("click", () => {
@@ -253,12 +882,18 @@
                 clearButton.style.display = "block";
                 suggestionsList.innerHTML = "";
                 suggestionsList.style.display = "none";
+                setResultsDimmed(false);
               });
               suggestionsList.appendChild(li);
             });
+          })
+          .catch(() => {
+            suggestionsList.style.display = "none";
+            setResultsDimmed(false);
           });
       } else {
         suggestionsList.style.display = "none";
+        setResultsDimmed(false);
       }
     });
 
@@ -266,19 +901,53 @@
       input.value = "";
       input.focus();
       clearButton.style.display = "none";
+      suggestionsList.innerHTML = "";
       suggestionsList.style.display = "none";
+      setResultsDimmed(false);
     });
 
     document.addEventListener("click", (e) => {
       if (!suggestionsList.contains(e.target) && e.target !== input) {
         suggestionsList.innerHTML = "";
         suggestionsList.style.display = "none";
+        setResultsDimmed(false);
       }
     });
 
+    if (form) {
+      form.addEventListener("submit", () => {
+        const movieName = input.value.trim();
+
+        if (!movieName) {
+          return;
+        }
+
+        submitBtn.classList.add("loading");
+        submitBtn.disabled = true;
+
+        suggestionsList.innerHTML = "";
+        suggestionsList.style.display = "none";
+        setResultsDimmed(false);
+
+        const existingResultsHeader = document.querySelector(".results-header");
+        const existingResultsGrid = document.getElementById("resultsGrid");
+        const existingShowMore = document.querySelector(".show-more-wrap");
+        const existingEmptyState = document.getElementById("emptyState");
+        const existingError = document.getElementById("errorState");
+
+        if (existingResultsHeader) existingResultsHeader.style.display = "none";
+        if (existingResultsGrid) existingResultsGrid.style.display = "none";
+        if (existingShowMore) existingShowMore.style.display = "none";
+        if (existingEmptyState) existingEmptyState.style.display = "none";
+        if (existingError) existingError.style.display = "none";
+
+        loadingState.classList.add("active");
+      });
+    }
+
     function toggleFavorite(el, title) {
-      el.classList.toggle('favorited');
-      const isFavorited = el.classList.contains('favorited');
+      el.classList.toggle("favorited");
+      const isFavorited = el.classList.contains("favorited");
 
       fetch(isFavorited ? "/add_favorite" : "/remove_favorite", {
         method: "POST",
